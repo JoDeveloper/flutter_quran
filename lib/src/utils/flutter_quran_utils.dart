@@ -14,6 +14,8 @@ class FlutterQuran {
   /// [init] initializes the FlutterQuran, and must be called before starting using the package
   Future<void> init(
       {List<Bookmark>? userBookmarks, bool overwriteBookmarks = false}) async {
+    Get.put(QuranController());
+    Get.put(BookmarksController());
     PreferencesUtils().preferences = await SharedPreferences.getInstance();
     await Get.find<QuranController>().loadQuran();
     Get.find<BookmarksController>().initBookmarks(

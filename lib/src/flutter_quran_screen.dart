@@ -166,7 +166,9 @@ class FlutterQuranScreen extends GetView<QuranController> {
                                 ? QuranPageBottomInfoWidget(
                                     page: index + 1,
                                     hizb: page.hizb,
-                                    surahName: page.ayahs.last.surahNameAr,
+                                    surahName: page.ayahs.isNotEmpty
+                                        ? page.ayahs.last.surahNameAr
+                                        : '',
                                   )
                                 : const SizedBox.shrink()),
                       ],

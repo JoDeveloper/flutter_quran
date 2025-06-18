@@ -28,7 +28,8 @@ class AyahLongClickDialog extends StatelessWidget {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                ...AppBloc.bookmarksCubit.bookmarks
+                ...Get.find<BookmarksController>()
+                    .bookmarks
                     .sublist(0, 3)
                     .map((bookmark) => ListTile(
                           leading: Icon(
@@ -41,7 +42,7 @@ class AyahLongClickDialog extends StatelessWidget {
                                 fontWeight: FontWeight.bold, fontSize: 16),
                           ),
                           onTap: () {
-                            AppBloc.bookmarksCubit.saveBookmark(
+                            Get.find<BookmarksController>().saveBookmark(
                                 ayahId: ayah.id,
                                 page: ayah.page,
                                 bookmarkId: bookmark.id);
@@ -52,8 +53,9 @@ class AyahLongClickDialog extends StatelessWidget {
                 InkWell(
                   onTap: () {
                     Clipboard.setData(ClipboardData(
-                            text: AppBloc
-                                .quranCubit.staticPages[ayah.page - 1].ayahs
+                            text: Get.find<QuranController>()
+                                .staticPages[ayah.page - 1]
+                                .ayahs
                                 .firstWhere((element) => element.id == ayah.id)
                                 .ayah))
                         .then((value) =>

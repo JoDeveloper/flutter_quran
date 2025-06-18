@@ -1,12 +1,11 @@
-import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:get/get.dart';
 
 import '../models/bookmark.dart';
 import '../repository/quran_repository.dart';
 
-class BookmarksCubit extends Cubit<List<Bookmark>> {
-  BookmarksCubit({QuranRepository? quranRepository})
-      : _quranRepository = quranRepository ?? QuranRepository(),
-        super([]);
+class BookmarksController extends GetxController {
+  BookmarksController({QuranRepository? quranRepository})
+      : _quranRepository = quranRepository ?? QuranRepository();
 
   final QuranRepository _quranRepository;
   final Bookmark searchBookmark =
@@ -17,23 +16,28 @@ class BookmarksCubit extends Cubit<List<Bookmark>> {
     Bookmark(id: 1, colorCode: 0xAAF36077, name: 'العلامة الحمراء'),
     Bookmark(id: 2, colorCode: 0xAA00CD00, name: 'العلامة الخضراء'),
   ];
-  List<Bookmark> bookmarks = [];
+  RxList<Bookmark> bookmarks = <Bookmark>[].obs;
 
   void initBookmarks({List<Bookmark>? userBookmarks, bool overwrite = false}) {
     if (overwrite) {
-      bookmarks = [...(userBookmarks ?? _defaultBookmarks), searchBookmark];
+      bookmarks.value = [
+        ...(userBookmarks ?? _defaultBookmarks),
+        searchBookmark
+      ];
     } else {
-      bookmarks = _quranRepository.getBookmarks();
-      if (bookmarks.isEmpty) {
+      var loaded = _quranRepository.getBookmarks();
+      if (loaded.isEmpty) {
         if (userBookmarks != null) {
-          bookmarks = [...userBookmarks, searchBookmark];
+          bookmarks.value = [...userBookmarks, searchBookmark];
         } else {
-          bookmarks = [..._defaultBookmarks, searchBookmark];
+          bookmarks.value = [..._defaultBookmarks, searchBookmark];
         }
+      } else {
+        bookmarks.value = loaded;
       }
     }
     _quranRepository.saveBookmarks(bookmarks);
-    emit(bookmarks);
+    bookmarks.refresh();
   }
 
   saveBookmark({
@@ -50,8 +54,7 @@ class BookmarksCubit extends Cubit<List<Bookmark>> {
       if (saveBookmark) {
         _quranRepository.saveBookmarks(bookmarks);
       }
-      bookmarks = [...bookmarks];
-      emit(bookmarks);
+      bookmarks.refresh();
     }
   }
 
@@ -64,8 +67,7 @@ class BookmarksCubit extends Cubit<List<Bookmark>> {
       if (saveBookmark) {
         _quranRepository.saveBookmarks(bookmarks);
       }
-      bookmarks = [...bookmarks];
-      emit(bookmarks);
+      bookmarks.refresh();
     }
   }
 }

@@ -1,19 +1,18 @@
-import 'package:bloc/bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_quran/src/models/surah.dart';
+import 'package:get/get.dart';
 
 import '../models/ayah.dart';
 import '../models/quran_page.dart';
 import '../repository/quran_repository.dart';
 
-class QuranCubit extends Cubit<List<QuranPage>> {
-  QuranCubit({QuranRepository? quranRepository})
-      : _quranRepository = quranRepository ?? QuranRepository(),
-        super([]);
+class QuranController extends GetxController {
+  QuranController({QuranRepository? quranRepository})
+      : _quranRepository = quranRepository ?? QuranRepository();
 
   final QuranRepository _quranRepository;
 
-  List<QuranPage> staticPages = [];
+  RxList<QuranPage> staticPages = <QuranPage>[].obs;
   List<int> quranStops = [];
   List<int> surahsStart = [];
   List<Surah> surahs = [];
@@ -29,7 +28,7 @@ class QuranCubit extends Cubit<List<QuranPage>> {
       _pageController = PageController(initialPage: lastPage - 1);
     }
     if (staticPages.isEmpty || quranPages != staticPages.length) {
-      staticPages = List.generate(quranPages,
+      staticPages.value = List.generate(quranPages,
           (index) => QuranPage(pageNumber: index + 1, ayahs: [], lines: []));
       final quranJson = await _quranRepository.getQuran();
       int hizb = 1;
@@ -98,7 +97,7 @@ class QuranCubit extends Cubit<List<QuranPage>> {
         }
         ayas.clear();
       }
-      emit(staticPages);
+      staticPages.refresh();
     }
   }
 

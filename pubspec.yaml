@@ -13,8 +13,7 @@ dependencies:
 
 
   # state management
-  bloc: ^9.0.0
-  flutter_bloc: ^9.0.0
+  get: ^4.6.6
 
 
   # local storage

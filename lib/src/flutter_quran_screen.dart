@@ -211,7 +211,7 @@ class _QuranLineWithBookmarks extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Obx(() {
+    return Obx(key: key, () {
       final bookmarks = bookmarksController.bookmarks;
       final bookmarksAyahs =
           bookmarks.map((bookmark) => bookmark.ayahId).toList();

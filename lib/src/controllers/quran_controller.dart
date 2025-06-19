@@ -28,50 +28,64 @@ class QuranController extends GetxController {
       _pageController = PageController(initialPage: lastPage - 1);
     }
     if (staticPages.isEmpty || quranPages != staticPages.length) {
-      staticPages.value = List.generate(quranPages,
+      final List<QuranPage> pages = List.generate(quranPages,
           (index) => QuranPage(pageNumber: index + 1, ayahs: [], lines: []));
+      final List<int> localQuranStops = [];
+      final List<int> localSurahsStart = [];
+      final List<Surah> localSurahs = [];
+      final List<Ayah> localAyahs = [];
       final quranJson = await _quranRepository.getQuran();
       int hizb = 1;
       int surahsIndex = 1;
       List<Ayah> thisSurahAyahs = [];
-      for (int i = 0; i < quranJson.length; i++) {
+      Surah? lastSurah;
+      Ayah? lastAyah;
+      final int quranJsonLength = quranJson.length;
+      for (int i = 0; i < quranJsonLength; i++) {
         final ayah = Ayah.fromJson(quranJson[i]);
         if (ayah.surahNumber != surahsIndex) {
-          surahs.last.endPage = ayahs.last.page;
-          surahs.last.ayahs = thisSurahAyahs;
+          if (lastSurah != null && lastAyah != null) {
+            lastSurah.endPage = lastAyah.page;
+            lastSurah.ayahs = thisSurahAyahs;
+          }
           surahsIndex = ayah.surahNumber;
           thisSurahAyahs = [];
         }
-        ayahs.add(ayah);
+        localAyahs.add(ayah);
         thisSurahAyahs.add(ayah);
-        staticPages[ayah.page - 1].ayahs.add(ayah);
+        pages[ayah.page - 1].ayahs.add(ayah);
         if (ayah.ayah.contains('۞')) {
-          staticPages[ayah.page - 1].hizb = hizb++;
-          quranStops.add(ayah.page);
+          pages[ayah.page - 1].hizb = hizb++;
+          localQuranStops.add(ayah.page);
         }
         if (ayah.ayah.contains('۩')) {
-          staticPages[ayah.page - 1].hasSajda = true;
+          pages[ayah.page - 1].hasSajda = true;
         }
         if (ayah.ayahNumber == 1) {
           ayah.ayah = ayah.ayah.replaceAll('۞', '');
-          staticPages[ayah.page - 1].numberOfNewSurahs++;
-          surahs.add(Surah(
+          pages[ayah.page - 1].numberOfNewSurahs++;
+          final surah = Surah(
               index: ayah.surahNumber,
               startPage: ayah.page,
               endPage: 0,
               nameEn: ayah.surahNameEn,
               nameAr: ayah.surahNameAr,
-              ayahs: []));
-          surahsStart.add(ayah.page - 1);
+              ayahs: []);
+          localSurahs.add(surah);
+          localSurahsStart.add(ayah.page - 1);
+          lastSurah = surah;
         }
+        lastAyah = ayah;
       }
-      surahs.last.endPage = ayahs.last.page;
-      surahs.last.ayahs = thisSurahAyahs;
-      for (QuranPage staticPage in staticPages) {
+      if (lastSurah != null && lastAyah != null) {
+        lastSurah.endPage = lastAyah.page;
+        lastSurah.ayahs = thisSurahAyahs;
+      }
+      for (QuranPage staticPage in pages) {
         List<Ayah> ayas = [];
         for (Ayah aya in staticPage.ayahs) {
           if (aya.ayahNumber == 1 && ayas.isNotEmpty) {
-            ayas.clear();
+            ayas = [];
           }
           if (aya.ayah.contains('\n')) {
             final lines = aya.ayah.split('\n');
@@ -88,15 +102,21 @@ class QuranController extends GetxController {
               ayas.add(a);
               if (i < lines.length - 1) {
                 staticPage.lines.add(Line([...ayas]));
-                ayas.clear();
+                ayas = [];
               }
             }
           } else {
             ayas.add(aya);
           }
         }
-        ayas.clear();
+        ayas = [];
       }
+      staticPages.value = pages;
+      quranStops = localQuranStops;
+      surahsStart = localSurahsStart;
+      surahs = localSurahs;
+      ayahs.clear();
+      ayahs.addAll(localAyahs);
       staticPages.refresh();
     }
   }

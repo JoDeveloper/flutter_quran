@@ -26,6 +26,8 @@ class FlutterQuranScreen extends GetView<QuranController> {
     this.bottomWidget,
     this.appBar,
     this.onPageChanged,
+    this.onTafseer,
+    this.onErab,
     super.key,
   });
 
@@ -43,6 +45,12 @@ class FlutterQuranScreen extends GetView<QuranController> {
 
   /// Callback when a Quran page changes
   final ValueChanged<int>? onPageChanged;
+
+  /// Callback for tafseer button
+  final void Function(Ayah)? onTafseer;
+
+  /// Callback for erab button
+  final void Function(Ayah)? onErab;
 
   @override
   Widget build(BuildContext context) {
@@ -110,6 +118,8 @@ class FlutterQuranScreen extends GetView<QuranController> {
                                           bookmarksController:
                                               bookmarksController,
                                           deviceWidth: deviceSize.width,
+                                          onTafseer: onTafseer,
+                                          onErab: onErab,
                                         );
                                       }),
                                     ],
@@ -144,6 +154,8 @@ class FlutterQuranScreen extends GetView<QuranController> {
                                           orientation: orientation,
                                           constraints: constraints,
                                           page: page,
+                                          onTafseer: onTafseer,
+                                          onErab: onErab,
                                         );
                                       }),
                                     ],
@@ -185,6 +197,8 @@ class _QuranLineWithBookmarks extends StatelessWidget {
     this.orientation,
     this.constraints,
     this.page,
+    this.onTafseer,
+    this.onErab,
   });
 
   final dynamic line;
@@ -196,6 +210,8 @@ class _QuranLineWithBookmarks extends StatelessWidget {
   final Orientation? orientation;
   final BoxConstraints? constraints;
   final dynamic page;
+  final void Function(Ayah)? onTafseer;
+  final void Function(Ayah)? onErab;
 
   @override
   Widget build(BuildContext context) {
@@ -224,6 +240,16 @@ class _QuranLineWithBookmarks extends StatelessWidget {
               bookmarksAyahs,
               bookmarks,
               boxFit: line.ayahs.last.centered ? BoxFit.scaleDown : BoxFit.fill,
+              onLongPress: (Ayah ayah) {
+                showDialog(
+                  context: context,
+                  builder: (ctx) => AyahLongClickDialog(
+                    ayah,
+                    onTafseer: onTafseer,
+                    onErab: onErab,
+                  ),
+                );
+              },
             ),
           ),
         ],

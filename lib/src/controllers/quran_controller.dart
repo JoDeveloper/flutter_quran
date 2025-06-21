@@ -42,37 +42,45 @@ class QuranController extends GetxController {
       Ayah? lastAyah;
       final int quranJsonLength = quranJson.length;
       for (int i = 0; i < quranJsonLength; i++) {
-        final ayah = Ayah.fromJson(quranJson[i]);
-        if (ayah.surahNumber != surahsIndex) {
+        final ayahJson = quranJson[i];
+        final ayah = Ayah.fromJson(ayahJson);
+        final ayahText = ayah.ayah;
+        final ayahSurahNumber = ayah.surahNumber;
+        final ayahPage = ayah.page;
+        final ayahNumber = ayah.ayahNumber;
+        if (ayahSurahNumber != surahsIndex) {
           if (lastSurah != null && lastAyah != null) {
             lastSurah.endPage = lastAyah.page;
             lastSurah.ayahs = thisSurahAyahs;
           }
-          surahsIndex = ayah.surahNumber;
+          surahsIndex = ayahSurahNumber;
           thisSurahAyahs = [];
         }
         localAyahs.add(ayah);
         thisSurahAyahs.add(ayah);
-        pages[ayah.page - 1].ayahs.add(ayah);
-        if (ayah.ayah.contains('۞')) {
-          pages[ayah.page - 1].hizb = hizb++;
-          localQuranStops.add(ayah.page);
+        final page = pages[ayahPage - 1];
+        page.ayahs.add(ayah);
+        if (ayahText.contains('۞')) {
+          page.hizb = hizb++;
+          localQuranStops.add(ayahPage);
         }
-        if (ayah.ayah.contains('۩')) {
-          pages[ayah.page - 1].hasSajda = true;
+        if (ayahText.contains('۩')) {
+          page.hasSajda = true;
         }
-        if (ayah.ayahNumber == 1) {
-          ayah.ayah = ayah.ayah.replaceAll('۞', '');
-          pages[ayah.page - 1].numberOfNewSurahs++;
+        if (ayahNumber == 1) {
+          if (ayahText.contains('۞')) {
+            ayah.ayah = ayahText.replaceAll('۞', '');
+          }
+          page.numberOfNewSurahs++;
           final surah = Surah(
-              index: ayah.surahNumber,
-              startPage: ayah.page,
+              index: ayahSurahNumber,
+              startPage: ayahPage,
               endPage: 0,
               nameEn: ayah.surahNameEn,
               nameAr: ayah.surahNameAr,
               ayahs: []);
           localSurahs.add(surah);
-          localSurahsStart.add(ayah.page - 1);
+          localSurahsStart.add(ayahPage - 1);
           lastSurah = surah;
         }
         lastAyah = ayah;
@@ -82,42 +90,43 @@ class QuranController extends GetxController {
         lastSurah.ayahs = thisSurahAyahs;
       }
       for (QuranPage staticPage in pages) {
-        List<Ayah> ayas = [];
-        for (Ayah aya in staticPage.ayahs) {
-          if (aya.ayahNumber == 1 && ayas.isNotEmpty) {
-            ayas = [];
-          }
-          if (aya.ayah.contains('\n')) {
-            final lines = aya.ayah.split('\n');
-            for (int i = 0; i < lines.length; i++) {
-              bool centered = false;
-              if ((aya.centered && i == lines.length - 2)) {
-                centered = true;
-              }
-              final a = Ayah.fromAya(
-                  ayah: aya,
-                  aya: lines[i],
-                  ayaText: lines[i],
-                  centered: centered);
-              ayas.add(a);
-              if (i < lines.length - 1) {
-                staticPage.lines.add(Line([...ayas]));
-                ayas = [];
-              }
-            }
-          } else {
-            ayas.add(aya);
-          }
-        }
-        ayas = [];
+        _splitAyahLines(staticPage);
       }
       staticPages.value = pages;
       quranStops = localQuranStops;
       surahsStart = localSurahsStart;
       surahs = localSurahs;
-      ayahs.clear();
-      ayahs.addAll(localAyahs);
-      staticPages.refresh();
+      ayahs
+        ..clear()
+        ..addAll(localAyahs);
+    }
+  }
+
+  void _splitAyahLines(QuranPage staticPage) {
+    List<Ayah> ayas = [];
+    for (Ayah aya in staticPage.ayahs) {
+      if (aya.ayahNumber == 1 && ayas.isNotEmpty) {
+        ayas = [];
+      }
+      final ayaText = aya.ayah;
+      if (ayaText.contains('\n')) {
+        final lines = ayaText.split('\n');
+        for (int i = 0; i < lines.length; i++) {
+          bool centered = false;
+          if ((aya.centered && i == lines.length - 2)) {
+            centered = true;
+          }
+          final a = Ayah.fromAya(
+              ayah: aya, aya: lines[i], ayaText: lines[i], centered: centered);
+          ayas.add(a);
+          if (i < lines.length - 1) {
+            staticPage.lines.add(Line([...ayas]));
+            ayas = [];
+          }
+        }
+      } else {
+        ayas.add(aya);
+      }
     }
   }
 
